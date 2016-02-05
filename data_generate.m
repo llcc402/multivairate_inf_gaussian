@@ -1,22 +1,48 @@
-function data = data_generate(n)
+% Input:
+%      n      a scalar. The number of observations in each cluster.
+%      k      a scalar. The number of clusters.
+%      d      a scalar. The dimension of the data.
+% Output:
+%      data   a matrix of order (n * k) times d. 
+function [data, centers] = data_generate(n, k, d)
 if nargin < 1
-    n = 1000;
+    n = 500;
+end
+if nargin < 2
+    k = 5;
+end
+if nargin < 3
+    d = 2;
 end
 
-theta = rand(n, 1) * 2 * pi;
-r = 1;
-epsilon = .2;
-x = r * cos(theta) + rand(n, 1) * epsilon;
-y = r * sin(theta) + rand(n, 1) * epsilon;
+%--------------------------------------------------------------------------
+% STEP 1: Generate centers
+%--------------------------------------------------------------------------
+sigma = 40;
+centers = mvnrnd(zeros(1, d), eye(d) * sigma, k);
 
-data1 = [x, y];
+%--------------------------------------------------------------------------
+% STEP 2: Generate mixing measure
+%--------------------------------------------------------------------------
+mixing = rand(1, k);
+mixing = mixing / sum(mixing);
 
-theta = rand(n, 1) * 2 * pi;
-r = 2;
-x = r * cos(theta) + rand(n, 1) * epsilon;
-y = r * sin(theta) + rand(n, 1) * epsilon;
+%--------------------------------------------------------------------------
+% STEP 3: Generate latent variable
+%--------------------------------------------------------------------------
+r = rand(1, n*k);
+[~, ~, z] = histcounts(r, [0, cumsum(mixing)]);
 
-data2 = [x, y];
+%--------------------------------------------------------------------------
+% STEP 3: Generate data 
+%--------------------------------------------------------------------------
+data = zeros(n*k, d);
+for i = 1 : n*k
+    data(i,:) = mvnrnd(centers(z(i),:), eye(d));
+end
 
-data = [data1; data2];
-plot(data(:,1), data(:,2), 'o')
+if d == 2
+    plot(data(:,1), data(:,2), '.')
+end
+
+end

@@ -82,9 +82,10 @@ for iter = 1:maxIter
     end
     
     % sample weights of G0
-    counts = zeros(1,actN);
-    for i = 1:length(ix)
-        counts(i) = length(ix{i});
+    if length(num_atom) < actN
+        counts = [num_atom, zeros(1, actN - length(num_atom))];
+    else
+        counts = num_atom;
     end
     a = counts + 1;
     b = [cumsum(counts(2:end), 'reverse'), 0];
@@ -102,6 +103,7 @@ for iter = 1:maxIter
         log_post = log_likelihood' + log(G0);
         log_post = log_post - max(log_post);
         post = exp(log_post);
+        post = post / sum(post);
         [~, ~, z(i)] = histcounts(rand(1), [0, cumsum(post)]);
     end
 end
